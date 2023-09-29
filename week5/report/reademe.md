@@ -6,7 +6,7 @@
 ![Screenshot](./img/게임소개1.png)
 
 #사용된 4개의 핵심 함수입니다
-![Screenshot](./img/핵심함수1.png)
+![Screenshot](./img/함수소개1.png)
 
 #메인함수와 컨트롤함수입니다
 - draw함수호출과 바둑돌위치 및 사용자의 입력을 받아 move_arrow
