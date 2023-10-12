@@ -33,6 +33,8 @@ game_control 함수의 바뀐점
 
 ![Screenshot](./img/p_checkwin_3.png)
 
+![Screenshot](./img/p_checkwin_4.png)
+
 
 
 
