@@ -24,9 +24,16 @@ game_control 함수의 바뀐점
 
 추가된 display_stone 함수
 
+![Screenshot](./img/p_display.png)
+
+추가된 checkwin 함수
 ![Screenshot](./img/p_checkwin_1.png)
 
-![Screenshot](./img/p_display.png)
+![Screenshot](./img/p_checkwin_2.png)
+
+![Screenshot](./img/p_checkwin_3.png)
+
+
 
 
 
