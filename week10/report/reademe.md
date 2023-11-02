@@ -3,7 +3,7 @@
 https://www.w3schools.com/ 사이트의 html game example 게임 코드 분석 및 리뷰
 ![Screenshot](./img/p_게임소개.png)
 
-meta 태그부터 분석 시
+meta 태그부터 분석 시작
 ![Screenshot](./img/p_코드리뷰_1.png)
 MyGameArea 객체 분석
 ![Screenshot](./img/p_코드리뷰_2.png)
