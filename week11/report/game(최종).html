@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<!--  메타태그에는 모바일 환경(viewport)에서 보여질 화면을 제어합니다
+	  width를 휴대폰의 화면 너비와 동일하게
+	  스케일은 확대 비율입니다(1.0은 100%) -->
+<style>
+canvas {
+    border:1px solid #d3d3d3;
+    background-color: #f1f1f1;
+}
+</style>
+</head>
+<!-- onload의 의미는 페이지가 랜더링이 완전히 된 후에 함수를 불러오는 의미입니다 -->
+<body onload="startGame()">
+<script>
+
+var myGamePiece;                // 플레이어가 조작하는 객체(사각형)를 참조하는 변수 
+var myObstacles = [];           // 장애물을 저장하는 배열 
+var myScore;                    // 점수를 저장하는 변수
+
+var mySound;                    // 효과음 추가
+var clicked = false;            // 마우스 클릭 여부
+var myBackground;               // 배경추가
+var myMusic;                    // 배경음 추가
+var player2_Clicked   = false;  // 플레이어 2 체크 여부 
+var player1_Clicked   = false;  // 플레이어 2 체크 여부 
+var started_flag = false;       // StartGame 버튼 클릭 여부
+var level_flag2 = false;        // 난이도 버튼 클릭 여부
+var setSpeed = 1;               // 난이도별 스피드  
+var setinterval = 150;          // 난이도별 장애물 생성기준 단축 기존 150
+var sounds = ["Easy.mp3","normal.mp3","Extreme.mp3"]; // 난이도별 배경음 
+  
+
+function startGame() {
+    
+    
+    myGameArea.start();  // myGameArea 객체의 start메소드 호출 
+    // component 라는 생성자 함수를 사용하여  객체를 생성하고 변수에 저장합니다.
+    myGamePiece = new component(30, 30, "fighter_1.png", 10, 120,  "image");	
+    myGamePiece2 = new component(30, 30, "fighter_2_1.png", 10, 150,  "image");
+    myScore = new component("30px", "Consolas", "black", 350, 40, "text"); 
+    myName = new component("30px", "Consolas", "white", 240, 40, "text"); 
+    myBackground = new component(656, 270, "background_1.jpg", 0, 0, "image");
+    mySound = new sound("bounce.mp3");
+
+    intro = new component("25px","Consolas", "black",235,105,"intro");
+    intro2 = new component("25px","Consolas", "black",480,270,"intro2");
+    intro.update();
+    myName.text="장애물 피하기 게임";
+    myName.update();
+}
+
+
+
+var myGameArea = { // 객체를 저장
+    canvas : document.createElement("canvas"), // 동적으로 canvas html 요소를 생성후 canvas 속성할당
+    start : function() { // 게임 진행되는 공간 넓이,높이
+        
+        var self = this;
+        this.canvas.width = 480;
+        this.canvas.height = 270;
+        this.context = this.canvas.getContext("2d"); // 2D 그래픽요소를 불러옵니다
+        // document.body의 첫 번재 자식 노드 앞에 canvas 노드가 삽입됩니다.
+        document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+        document.getElementById('restart-button').style.display = 'none';
+        this.frameNo = 0; // 프레임 수(score값)
+
+        
+            
+            this.canvas.addEventListener("click", function(event) {
+            this.x = event.clientX ;
+            this.y = event.clientY ;
+
+            if(!started_flag){
+                changeBtnColor(this.x,this.y,85,100,385,100);
+                // StratGame을 눌렀을 때 
+                if(this.x >= 235-70 && this.x <= (235-70)+150
+                    && this.y > 105-25 && this.y <= (105-30)+55)
+                    {
+                        if(!player1_Clicked && !player2_Clicked ){
+                            alert("플레이어를 선택하세요");
+                        }else{
+                            started_flag = true;
+                            intro2.update();   
+                        }
+                    
+                    }
+            }else if(!level_flag2){
+                 // 쉬움 버튼 영역 확인
+                if(this.x > ((480-300)/2) && this.x < ((480-300)/2 + 70) &&
+                     this.y > ((270-30)/2) && this.y < ((270-30)/2 + 70)) {
+                         myMusic = new sound(sounds[0]);
+                         level_flag2 = true;
+                         setinterval = 150;
+                         setSpeed = 1;
+                         myMusic.play();
+                         self.interval = setInterval(updateGameArea, 20);  
+                }
+                // 노말 버튼 영역 확인
+                else if(this.x > ((480-70)/2) && this.x < ((480-70)/2 + 70) && 
+                this.y > ((270-30)/2) && this.y < ((270-30)/2 + 70)) {
+                         myMusic = new sound(sounds[1]);
+                         level_flag2 = true;
+                         setinterval = 60;
+                         setSpeed = 3;
+                         myMusic.play();
+                         self.interval = setInterval(updateGameArea, 20);   
+                }
+                // 하드 버튼 영역 확인
+                else if(this.x > ((480/2)+80) && this.x < ((480/2)+80 + 70) &&
+                this.y > ((270-30)/2) && this.y < ((270-30)/2 + 70)) {
+                         myMusic = new sound(sounds[2]);
+                         level_flag2 = true;
+                         setinterval = 30;
+                         setSpeed = 5;
+                         myMusic.play();
+                         self.interval = setInterval(updateGameArea, 20);  
+                }
+
+            }
+            });
+
+            window.addEventListener('keydown', function (e) {
+                myGameArea.keys = (myGameArea.keys || []);
+                myGameArea.keys[e.keyCode] = true;
+            })
+            window.addEventListener('keyup', function (e) {
+                myGameArea.keys[e.keyCode] = false;
+            })
+        },
+    clear : function() {
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        //  전체 캔버스를 지우는 clear() 함수를 추가합니다.
+    },
+    stop : function() {
+        // 인터벌 중지
+        clearInterval(this.interval);
+        document.getElementById('restart-button').style.display = 'block'; 
+    },
+}
+
+// 각 버튼에 대해 클릭하면 클릭하지 않은 버튼의 색깔은 바뀝니다
+function changeBtnColor(x,y,p1_x,p1_y,p2_x,p2_y){
+    // P1 버튼
+    var dx1 = x - p1_x;
+    var dy1 = y - p1_y;
+    var angle1 = Math.atan2(dy1, dx1);
+    if (dx1 * dx1 + dy1 * dy1 <= 50 * 50 && (angle1 > Math.PI / 2 || angle1 < -Math.PI / 2)) {
+        player1_Clicked = true;
+        player2_Clicked = false;
+        intro.color2 ="#666666";
+        intro.color = "#FF0000";
+        myGameArea.clear();
+        intro.update();
+        myName.update();
+    }
+    // P2 버튼
+    var dx2 = x - p2_x;
+    var dy2 = y - p2_y;
+    var angle2 = Math.atan2(dy2, dx2);
+    if (dx2 * dx2 + dy2 * dy2 <= 50 * 50 && (angle2 < Math.PI / 2 && angle2 > -Math.PI / 2)) {
+        player1_Clicked = false;
+        player2_Clicked = true;
+        intro.color2 ="#0000FF";
+        intro.color = "#666666";
+        myGameArea.clear();
+        intro.update();
+        myName.update();
+    }
+}
+
+//  ES6 신문법 이전에는 class 객체가 없었기 떄문에 함수를 이용하여 객체를 생성하였습니다.
+function component(width, height, color, x, y, type) {
+    this.type = type;       // 타입(text or image or null )
+
+    //  new Image() 객체 생성자를 사용하여 이미지 객체를 생성
+    if (type == "image" ) {
+        this.image = new Image();
+        this.image.src = color; 
+    }
+
+    this.width = width;   	// 가로	
+    this.height = height;	// 세로
+    this.speedX = 0;        // x축 속도
+    this.speedY = 0;	    // y축 속도
+    this.x = x;		        // x좌표
+    this.y = y;    		    // y좌표 
+    this.color = "#FF0000"; // 빨강색
+    this.color2 = "#0000FF";// 파랑색
+    this.update = function() { // 2D 그래픽 그리기
+        ctx = myGameArea.context; //myGameArea 객체의 context 속성을 부여(2D그래픽)
+
+        if (this.type == "text") { // 스코어를 표시 할 때
+            ctx.font = this.width + " " + this.height;
+            ctx.fillStyle = color;
+            ctx.fillText(this.text, this.x, this.y);
+        }else if (this.type == "intro2") {
+            // 이전 인트로 제거
+            myGameArea.clear();
+            // 백그라운드 배경
+            ctx.fillStyle = color;
+            ctx.fillRect(0,0,myGameArea.canvas.width,myGameArea.canvas.height);
+            myName.update();
+
+            // 쉬움 배경,버튼
+            ctx.fillStyle = "#00FF33";                                     
+            ctx.fillRect((480-300)/2,(270-30)/2,70,70);
+            
+            ctx.fillStyle = "#00FF33";
+            ctx.textAlign = 'center';
+            ctx.font = "30px", "Consolas";
+            ctx.fillText("Easy",(480-230)/2, ( (270-30) /2 )-20 );  
+
+
+            // 노말 배경,버튼
+            ctx.fillStyle = "#FFCC00";                                     
+            ctx.fillRect((480-70)/2,(270-30)/2,70,70);
+
+            ctx.fillStyle = "#FFCC00";
+            ctx.textAlign = 'center';
+            ctx.font = "30px", "Consolas";
+            ctx.fillText("Normal",(480)/2, ( (270-30) /2 )-20 );  
+
+
+            // 하드 배경,버튼
+            ctx.fillStyle = "#CC0000";                                     
+            ctx.fillRect( (480/2)+80 ,(270-30)/2,70,70);
+
+            ctx.fillStyle = "#CC0000";
+            ctx.textAlign = 'center';
+            ctx.font = "30px", "Consolas";
+            ctx.fillText("Hard",(480/2)+115, ( (270-30) /2 )-20 );
+        }
+        else if (this.type == "intro") {
+            // 백그라운드 배경
+            ctx.fillStyle = color;
+            ctx.fillRect(0,0,myGameArea.canvas.width,myGameArea.canvas.height);
+
+            // GameStart 버튼 배경
+            ctx.fillStyle = "#eeaa00";
+            ctx.fillRect(this.x-75,this.y-30,150,45);
+
+            // GameStart 버튼
+            ctx.fillStyle = color;
+            ctx.textAlign = 'center';
+            ctx.font = this.width + " " + this.height;
+            ctx.fillText("Start Game",this.x,this.y);    
+
+            // plyaer1 배경
+            ctx.beginPath();
+            ctx.fillStyle = this.color;
+            ctx.arc(85, 100, 50, 0.5 * Math.PI, 1.5 * Math.PI);           
+            ctx.stroke();
+            ctx.fill();
+
+            // Player 1 버튼
+            ctx.fillStyle = color;
+            ctx.textAlign = 'center';
+            ctx.font = this.width + " " + this.height;
+            ctx.fillText("P1",this.x-175,this.y);  
+
+            // plyaer2 배경
+            ctx.beginPath();
+            ctx.fillStyle = this.color2;
+            ctx.arc(385, 100, 50, 1.5 * Math.PI, 0.5 * Math.PI);
+            ctx.stroke();
+            ctx.fill();
+
+            // Player 2 버튼
+            ctx.fillStyle = color;
+            ctx.textAlign = 'center';
+            ctx.font = this.width + " " + this.height;
+            ctx.fillText("P2",this.x+175,this.y);  
+        }
+        else if (this.type == "image") {         
+        ctx.drawImage(this.image,
+            this.x,
+            this.y,
+            this.width, this.height);
+        }
+        else {  // 도형을 그릴 떄 (장애물)
+            ctx.fillStyle = color;                                     
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+        }
+    }
+    this.newPos = function() { // 좌표 설정
+        this.x += this.speedX;
+        this.y += this.speedY;        
+    }
+        this.crashWith = function(otherobj) { // myObstacles[i] 즉 장애물의 객체
+            var myleft = this.x;                  // 유저(사각형)의 좌측 좌표
+            var myright = this.x + (this.width);  // 유저(사각형)의 우측 좌표 
+            var mytop = this.y;                   // 유저(사각형)의 상단 좌표
+            var mybottom = this.y + (this.height);// 유저(사각형)의 하단 좌표  
+
+            var otherleft = otherobj.x;                         // 장애물 형태의 좌측 좌표 
+            var otherright = otherobj.x + (otherobj.width);     // 장애물 형태의 우측 좌표 
+            var othertop = otherobj.y;                          // 장애물 형태의 상단 좌표 
+            var otherbottom = otherobj.y + (otherobj.height);   // 장애물 형태의 하단 좌표 
+            var crash = true;   // 충돌 boolean 변수 
+            if ((mybottom < othertop) || (mytop > otherbottom) || (myright < otherleft) || (myleft > otherright)) {
+                crash = false;  // // 충돌 상태가 아님
+            }
+            // 위 if문은 아래의 조건에 해당하지 않을 시 충돌이 아닙니다.
+            // 사각형의 하단 좌표가 장애물의 상단 좌표보다 작다면
+            // 사각형의 상단 좌표가 장애물의 하단 좌표보다 크다면
+            // 사각형의 우측 좌표가 장애물의 좌측 좌표 보다 작다면 
+            // 사각형의 좌측 좌표가 장애물의 우측 좌표를 넘어섰다면
+
+            // 위 조건문에 하나라도 해당하지 않는다면 충돌
+            
+            return crash;
+        }
+    }
+
+function updateGameArea() { // 지우고 그리기를 반복합니다.초당50회 불러오던 함수
+    var x, height, gap, minHeight, maxHeight, minGap, maxGap;
+    // 충돌이 없다면 화면을 지우고 프레임을 증가 
+    myGameArea.clear();
+    myBackground.newPos();
+    myBackground.update();
+    
+    for (i = 0; i < myObstacles.length; i += 1) {  // 장애물의 수 만큼 반복
+        if (myGamePiece.crashWith(myObstacles[i])) { // 장애물에 하나라도 충돌 시 멈춤
+            // 충돌 시 이미지 변환,효과음 발생,배경음 멈춤
+            myMusic.stop(); 
+            mySound.play();
+            myGamePiece.image.src = "boom.png";
+            myGamePiece.update();
+            setTimeout(function() {
+                myGameArea.stop();
+            }, 100); 
+            return;  
+        }if(player2_Clicked){   // 2P일 때
+            if (myGamePiece2.crashWith(myObstacles[i])) { 
+            myMusic.stop(); 
+            mySound.play();
+            myGamePiece2.image.src = "boom.png";
+            myGamePiece2.update();
+            setTimeout(function() {
+                myGameArea.stop();
+            }, 100); 
+            return;  
+         }  
+        }
+    }
+    myGameArea.frameNo += 1; // 프레임==스코어 값
+
+    // 키보드 입력 *마우스 클릭으로 유닛을 움직이지 않는 조건 
+    if(!clicked) {
+        keymove(setSpeed); 
+     };
+
+    if (myGameArea.frameNo == 1 || everyinterval(setinterval)) { // 난이도에 따라 장애물 생성
+        x = myGameArea.canvas.width;
+        // 장애물의 높이 Height 최소값,최대값을 기준으로
+        minHeight = 20;
+        maxHeight = 200;
+        height = Math.floor(Math.random()*(maxHeight-minHeight+1)+minHeight);
+        // 장애물의 간격 Gap 최소값,최대값을 기준으로
+        minGap = 50;
+        maxGap = 200;
+        gap = Math.floor(Math.random()*(maxGap-minGap+1)+minGap);
+
+        var color = getRandomColor(); // 랜덤 색상을 생성합니다.
+        myObstacles.push(new component(10, height, color, x, 0));
+        myObstacles.push(new component(10, x - height - gap, color, x, height + gap));
+        // 서로 다른 크기와 좌표값의 장애물들 생성
+    }
+     // 장애물들의 수 만큼 좌측으로 이동시키며 그리는 것을 반복
+    for (i = 0; i < myObstacles.length; i += 1) {
+        myObstacles[i].speedX = -setSpeed;
+        myObstacles[i].newPos();
+        myObstacles[i].update();
+    }
+    myScore.text="SCORE: " + myGameArea.frameNo;
+    myScore.update();
+    myGamePiece.newPos();    
+    myGamePiece.update();
+
+    if(player2_Clicked){ // 2P 객체 생성
+        myGamePiece2.newPos();    
+        myGamePiece2.update();
+    }
+    
+   
+}
+
+// 프레임 번호가 n의 배수일 때 장애물 생성
+// 즉 일정한 간격으로 장애물을 생성해주기 위해
+function everyinterval(n) {
+    if ((myGameArea.frameNo / n) % 1 == 0) {return true;}
+    return false;
+}
+
+// 키보드 입력 ,  난이도에 따라 속도 변환
+function keymove(x){
+if(player2_Clicked){
+    clearmove();
+    clearmove2() 
+    if (myGameArea.keys && myGameArea.keys[37]) {myGamePiece.speedX = -x; myGamePiece.image.src = "fighter_2.png"; }
+    if (myGameArea.keys && myGameArea.keys[39]) {myGamePiece.speedX = x; myGamePiece.image.src = "fighter_2.png";}
+    if (myGameArea.keys && myGameArea.keys[38]) {myGamePiece.speedY = -x; myGamePiece.image.src = "fighter_2.png";}
+    if (myGameArea.keys && myGameArea.keys[40]) {myGamePiece.speedY = x; myGamePiece.image.src = "fighter_2.png";}
+    
+    if (myGameArea.keys && myGameArea.keys[87]) {myGamePiece2.speedY = -x; myGamePiece2.image.src = "fighter_2_2.png";} 
+    if (myGameArea.keys && myGameArea.keys[83]) {myGamePiece2.speedY = x; myGamePiece2.image.src = "fighter_2_2.png";} 
+    if (myGameArea.keys && myGameArea.keys[65]) {myGamePiece2.speedX = -x; myGamePiece2.image.src = "fighter_2_2.png";} 
+    if (myGameArea.keys && myGameArea.keys[68]) {myGamePiece2.speedX = x; myGamePiece2.image.src = "fighter_2_2.png";} 
+}else{
+    clearmove(); 
+    if (myGameArea.keys && myGameArea.keys[37]) {myGamePiece.speedX = -x; myGamePiece.image.src = "fighter_2.png"; }
+    if (myGameArea.keys && myGameArea.keys[39]) {myGamePiece.speedX = x; myGamePiece.image.src = "fighter_2.png";}
+    if (myGameArea.keys && myGameArea.keys[38]) {myGamePiece.speedY = -x; myGamePiece.image.src = "fighter_2.png";}
+    if (myGameArea.keys && myGameArea.keys[40]) {myGamePiece.speedY = x; myGamePiece.image.src = "fighter_2.png";}    
+}
+}
+
+// 16진수 랜덤 색상 추가
+function getRandomColor() {
+    var letters = '0123456789ABCDEF';
+    var color = '#';
+    for (var i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+}
+
+
+
+
+function moveup() {
+    clicked = true;
+    myGamePiece.image.src = "fighter_2.png";
+    myGamePiece.speedY = -setSpeed; 
+}
+
+function movedown() {
+    clicked = true;
+    myGamePiece.image.src = "fighter_2.png";
+    myGamePiece.speedY = setSpeed; 
+}
+
+function moveleft() {
+    clicked = true;
+    myGamePiece.image.src = "fighter_2.png";
+    myGamePiece.speedX = -setSpeed; 
+}
+
+function moveright() {
+    clicked = true;
+    myGamePiece.image.src = "fighter_2.png";
+    myGamePiece.speedX = setSpeed; 
+}
+// 1P
+function clearmove() {
+    clicked = false;
+    myGamePiece.image.src = "fighter_1.png";
+    myGamePiece.speedX = 0; 
+    myGamePiece.speedY = 0; 
+}
+// 2P
+function clearmove2() {
+    clicked = false;
+    myGamePiece2.image.src = "fighter_2_1.png";
+    myGamePiece2.speedX = 0; 
+    myGamePiece2.speedY = 0; 
+}
+// sound 객체 추가 
+function sound(src) {
+  this.sound = document.createElement("audio");
+  this.sound.src = src;
+  this.sound.setAttribute("preload", "auto");
+  this.sound.setAttribute("controls", "none");
+  this.sound.style.display = "none";
+  document.body.appendChild(this.sound);
+  this.play = function(){
+    this.sound.play();
+  }
+  this.stop = function(){
+    this.sound.pause();
+  }
+}
+// 재랜더링 
+function Restart(){
+    location.reload();
+}
+   
+
+
+
+</script>
+<div style="text-align:center;width:480px;">
+   <!-- 마우스 클릭 했을 때,마우스 버튼을 뗄 때 , 버튼 터치 할 때 (모바일) -->
+  <button onmousedown="moveup()" onmouseup="clearmove()" ontouchstart="moveup()">UP</button><br><br>
+  <button onmousedown="moveleft()" onmouseup="clearmove()" ontouchstart="moveleft()">LEFT</button>
+  <button onmousedown="moveright()" onmouseup="clearmove()" ontouchstart="moveright()">RIGHT</button><br><br>
+  <button onmousedown="movedown()" onmouseup="clearmove()" ontouchstart="movedown()">DOWN</button>
+  
+<div id="game-container">
+    <button id="restart-button" onclick="Restart()" style="display: none;">Restart</button>
+</div>
+
+</div>
+
+<p>The score will count one point for each frame you manage to "stay alive".</p>
+</body>
+</html>
