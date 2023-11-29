@@ -2,5 +2,6 @@
 
 # Unity 엔진 설치 및 3D 게임 요소 구현
 
+gravity ,Bound , Physical 
 ![Screenshot](./img/P1.png)
 ![Screenshot](./img/P2.png)
