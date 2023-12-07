@@ -7,7 +7,7 @@
 ![Screenshot](./img/p_게임소개.png)
 
 기존 코드의 문제점 3가지를 해결했습니다.
-![Screenshot](./img/p_기존코드문제점png)
+![Screenshot](./img/p_기존코드문제점.png)
 
 컴퓨터 자원을 활용하여 3가지 기능을 추가하였습니다.
 ![Screenshot](./img/p_추가기능.png)
