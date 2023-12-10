@@ -4,9 +4,9 @@
 ![Screenshot](./img/003.jpg)
 
 각 디렉토리별 히스토리입니다
-![Screenshot](./img/004.jng)
+![Screenshot](./img/004.jpg)
 각 디렉토리별 Rademe.md 파일들입니다
-![Screenshot](./img/005.jng)
+![Screenshot](./img/005.jpg)
 
 기존 게임을 업그레이드 했던 결과물들입니다
 ![Screenshot](./img/006.jpg)
